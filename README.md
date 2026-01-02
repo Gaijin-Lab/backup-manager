@@ -53,7 +53,7 @@ repoPath/
     "**/node_modules/**",
     "**/.cache/**",
     "**/dist/**",
-    "**/build/**",
+    "**/build/**"
   ],
   "retentionDays": 15,
   "debounceSeconds": 10,

@@ -1,0 +1,16 @@
+# Normalize line endings across OSes
+* text=auto
+
+# Force LF for code/config/docs
+*.ts   text eol=lf
+*.js   text eol=lf
+*.cjs  text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+*.sh   text eol=lf
+
+# Treat archives/images as binary
+*.zip binary
+*.7z  binary
+*.png binary
+*.jpg binary
