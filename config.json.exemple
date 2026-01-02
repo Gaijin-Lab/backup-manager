@@ -1,19 +1,19 @@
 {
-  "repoPath": "/home/koji/backup",
+  "repoPath": "/var/backups/backup-manager",
   "sources": [
-    "/home/koji/projects/BotGaijinLab"
+    "/srv/projects/example-project"
   ],
-  "restorePath": "/home/koji/backup/restore",
+  "restorePath": "/var/backups/backup-manager/restore",
   "ignore": [
     "**/.git/**",
     "**/node_modules/**",
     "**/.cache/**",
-    "**/alpine/**",
-    "**/run.sh/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/run.sh",
     "**/default/**",
-    "**/admins.json/**",
+    "**/admins.json",
     "**/cache/**"
-
   ],
   "retentionDays": 15,
   "debounceSeconds": 10,

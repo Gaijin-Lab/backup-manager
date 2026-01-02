@@ -1,4 +1,4 @@
-# Smart Backup Manager
+# 🛡️ Smart Backup Manager
 
 Sistema de **backup incremental inteligente**, multiplataforma (**Linux / Windows**), desenvolvido em **Node.js + TypeScript**, sem frontend web.
 
@@ -43,15 +43,23 @@ repoPath/
 
 ```json
 {
-  "repoPath": "/home/koji/backup",
+  "repoPath": "C:/Backups/backup-manager",
   "sources": [
-    "/home/koji/projects/BotGaijinLab"
+    "C:/Projects/example-project"
   ],
-  "restorePath": "/home/koji/restore",
+  "restorePath": "C:/Backups/backup-manager/restore",
+  "ignore": [
+    "**/.git/**",
+    "**/node_modules/**",
+    "**/.cache/**",
+    "**/dist/**",
+    "**/build/**",
+  ],
   "retentionDays": 15,
   "debounceSeconds": 10,
   "archive": {
-    "enabled": false
+    "enabled": true,
+    "encrypt": true
   }
 }
 ```
