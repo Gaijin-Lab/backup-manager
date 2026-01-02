@@ -1,45 +1,48 @@
-# 🛡️ Smart Backup Manager
+# Smart Backup Manager
 
-Sistema de **backup incremental inteligente**, multiplataforma (**Linux / Windows**), desenvolvido em **Node.js + TypeScript**, sem frontend web.
+A **smart incremental backup system**, cross-platform (**Linux / Windows**), built with **Node.js + TypeScript**, without any web frontend.
 
-Ideal para:
+Designed for:
 
-- Projetos de desenvolvimento  
-- Pastas de documentos  
-- Configurações críticas  
-- Ambientes locais ou VPS  
-
----
-
-## ✨ Funcionalidades
-
-- 📁 Monitoramento de pastas configuradas (`watch`)
-- 🧠 Detecção automática de mudanças
-- 📦 Backups incrementais com **deduplicação por hash (blobs)**
-- 🗂 Snapshots versionados em **JSON**
-- 🔐 Compactação opcional com **criptografia**
-- ♻️ Retenção automática (7, 15 ou 30 dias)
-- 🧹 Purge total com **garbage collection**
-- 🔄 Restauração completa de qualquer snapshot
-- ⚙️ Automação 24/7 com **PM2**
+- Development projects
+- Document folders
+- Critical configurations
+- Local environments or VPS servers
 
 ---
 
-## 📦 Estrutura de Backup
+## Features
+
+- :file_folder: Configurable directory monitoring (`watch`)
+- :brain: Automatic change detection
+- :package: Incremental backups with **hash-based deduplication (blobs)**
+- :card_file_box: Versioned snapshots stored as **JSON**
+- :lock: Optional archive compression with **encryption**
+- :recycle: Automatic retention policy (7, 15, or 30 days)
+- :broom: Full purge with **garbage collection**
+- :arrows_counterclockwise: Complete restoration from any snapshot
+- :gear: 24/7 automation using **PM2**
+
+---
+
+## Backup Structure
 
 ```text
 repoPath/
-├── blobs/       # Arquivos deduplicados (hash)
-├── snapshots/   # Metadados dos backups (.json)
-├── archives/    # Arquivos zip / 7z (optional)
-└── logs/        # Logs de execução
+├── blobs/       # Deduplicated files (hash-based)
+├── snapshots/   # Backup metadata (.json)
+├── archives/    # Zip / 7z archives (optional)
+└── logs/        # Execution logs
 ```
 
 ---
 
-## ⚙️ Configuração
+## Configuration
 
-### `config.json`
+> This file must NOT be committed to the repository.  
+> Use `config.json.example` as a base.
+
+### `config.json` (example)
 
 ```json
 {
@@ -67,40 +70,40 @@ repoPath/
 ### `.env`
 
 ```env
-BACKUP_PASSWORD=senha_super_secreta
+BACKUP_PASSWORD=change_me
 ```
 
-Necessário apenas se `archive.enabled = true` e `archive.encrypt = true`.
+Required only if `archive.enabled = true` and `archive.encrypt = true`.
 
 ---
 
-## 🚀 Comandos CLI
+## CLI Commands
 
-### Rodar backup manual
+### Run a manual backup
 
 ```bash
 npm run dev -- run
 ```
 
-### Monitorar mudanças (watch)
+### Watch for changes
 
 ```bash
 npm run dev -- watch
 ```
 
-### Listar snapshots
+### List snapshots
 
 ```bash
 npm run list
 ```
 
-### Restaurar snapshot
+### Restore a snapshot
 
 ```bash
 npm run restore -- --id <SNAPSHOT_ID>
 ```
 
-### Apagar snapshot (lógico)
+### Delete a snapshot (logical delete)
 
 ```bash
 npm run delete -- --id <SNAPSHOT_ID> --yes
@@ -108,17 +111,17 @@ npm run delete -- --id <SNAPSHOT_ID> --yes
 
 ---
 
-## 🔥 Purge Total (IRREVERSÍVEL)
+## Full Purge (IRREVERSIBLE)
 
-Remove snapshot + archive + blobs órfãos.
+Removes snapshot, archive, and orphaned blobs.
 
-### Execução real
+### Real execution
 
 ```bash
 npm run purge -- --id <SNAPSHOT_ID> --yes
 ```
 
-### Simulação (dry-run)
+### Dry-run (simulation)
 
 ```bash
 npm run purge -- --id <SNAPSHOT_ID> --dry-run --yes
@@ -126,7 +129,7 @@ npm run purge -- --id <SNAPSHOT_ID> --dry-run --yes
 
 ---
 
-## 🔁 Automação 24/7 (PM2)
+## 24/7 Automation (PM2)
 
 ### Linux
 
@@ -145,20 +148,81 @@ pm2 save
 
 ---
 
-## 🛠 Tecnologias Utilizadas
+## Technologies Used
 
-- Node.js  
-- TypeScript  
-- Commander  
-- Chokidar  
-- Archiver  
-- Crypto  
-- PM2  
+- Node.js
+- TypeScript
+- Commander
+- Chokidar
+- Archiver
+- Crypto
+- PM2
 
 ---
 
-## 📌 Observações
+## Notes
 
-- O sistema **não sobrescreve backups**: tudo é versionado.
-- A **deduplicação reduz drasticamente o uso de disco**.
-- Ideal para execução contínua em **servidores ou máquinas locais**.
+- Backups are never overwritten; everything is fully versioned.
+- Deduplication drastically reduces disk usage.
+- Suitable for continuous execution on servers or local machines.
+
+---
+
+## Usage Policy and Ethics
+
+This project is open-source and distributed under the **MIT License**.  
+In addition to the license terms, the following guidelines promote ethical, transparent, and responsible usage.
+
+### Commercial Resale
+- This project should not be resold as-is, rebranded, or distributed commercially without significant original modifications.
+- Selling this software alone, or bundling it as a paid product without meaningful added value, is strongly discouraged.
+
+> Note: This is an ethical guideline, not a legal restriction.  
+> The MIT License still applies.
+
+---
+
+### Modifications and Derivative Works
+- Forks and modifications are allowed and encouraged.
+- If you modify or extend this project:
+  - Clearly document your changes
+  - Do not remove credits or misrepresent authorship
+  - Inform end users when behavior differs from the original project
+
+---
+
+### Privacy and Usage Data
+- This software does not collect, transmit, or share usage data by default.
+- If you add telemetry, analytics, or remote logging:
+  - You must explicitly inform users
+  - You must provide a way to disable it
+  - Hidden data collection is strongly discouraged
+
+---
+
+### Responsible Use
+This project must not be used for:
+- Malicious activity
+- Unauthorized data access
+- Circumventing security controls
+
+The author is not responsible for misuse or damages caused by improper configuration or usage.
+
+---
+
+## Artificial Intelligence Usage
+
+This project uses AI-assisted development as a support tool, including:
+- Code review and refactoring
+- Bug detection and correction
+- Documentation improvements
+
+All final architectural decisions, validations, and implementations are performed by a human developer.
+
+> AI is used as an assistive technology, not as an autonomous system.
+
+---
+
+## License
+
+This project is licensed under the MIT License.
