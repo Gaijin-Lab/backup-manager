@@ -1,0 +1,63 @@
+# =========================
+# Node.js
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# Environment variables
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Build / TypeScript
+# =========================
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# =========================
+# PM2
+# =========================
+.pm2/
+pids/
+logs/
+
+# =========================
+# Backups / arquivos gerados
+# =========================
+*.zip
+*.7z
+*.tar
+*.tar.gz
+backup-manager.zip
+src.zip
+
+# =========================
+# OS / Editor
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# IDEs / Editores
+# =========================
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+
+# =========================
+# Cache / Temporários
+# =========================
+.cache/
+.tmp/
+temp/

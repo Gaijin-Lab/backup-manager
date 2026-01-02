@@ -1,0 +1,24 @@
+{
+  "repoPath": "/home/koji/backup",
+  "sources": [
+    "/home/koji/projects/BotGaijinLab"
+  ],
+  "restorePath": "/home/koji/backup/restore",
+  "ignore": [
+    "**/.git/**",
+    "**/node_modules/**",
+    "**/.cache/**",
+    "**/alpine/**",
+    "**/run.sh/**",
+    "**/default/**",
+    "**/admins.json/**",
+    "**/cache/**"
+
+  ],
+  "retentionDays": 15,
+  "debounceSeconds": 10,
+  "archive": {
+    "enabled": true,
+    "encrypt": true
+  }
+}
