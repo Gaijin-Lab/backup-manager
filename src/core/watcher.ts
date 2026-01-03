@@ -1,11 +1,12 @@
-import chokidar from "chokidar";
+﻿import chokidar from "chokidar";
+import chalk from "chalk";
 import { BackupConfig } from "./config.js";
 import { runBackup } from "./snapshot.js";
 import { applyRetention } from "./retention.js";
 
 export async function startWatcher(cfg: BackupConfig) {
-  console.log("👀 Watching:", cfg.sources.join(", "));
-  console.log(`Debounce: ${cfg.debounceSeconds}s`);
+  console.log(chalk.cyan(`Watching: ${cfg.sources.join(", ")}`));
+  console.log(chalk.cyan(`Debounce: ${cfg.debounceSeconds}s`));
 
   let timer: NodeJS.Timeout | null = null;
   let running = false;
@@ -16,9 +17,13 @@ export async function startWatcher(cfg: BackupConfig) {
     try {
       const id = await runBackup(cfg);
       await applyRetention(cfg);
-      console.log(`✅ Backup OK: ${id}`);
+      if (!id) {
+        console.log(chalk.yellow("No changes detected. Backup skipped."));
+      } else {
+        console.log(chalk.green(`Backup OK: ${id}`));
+      }
     } catch (e) {
-      console.error("❌ Backup error:", e);
+      console.error(chalk.red("Backup error:"), e);
     } finally {
       running = false;
     }

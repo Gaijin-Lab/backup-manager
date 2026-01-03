@@ -1,101 +1,83 @@
-import fs from "fs";
-import fsp from "fs/promises";
+﻿import fs from "fs/promises";
 import path from "path";
-import archiver from "archiver";
-import { spawn } from "node:child_process";
 
 import { BackupConfig } from "../core/config.js";
 import { Snapshot } from "../core/snapshot.js";
-import { blobPath } from "../core/store.js";
+import { FileEntry } from "../core/scanner.js";
 import { logLine } from "../core/logger.js";
+import { run7z } from "../core/sevenZip.js";
 
-function get7zBin() {
-  // permite você forçar no .env:
-  // SEVEN_ZIP_BIN="C:\Program Files\7-Zip\7z.exe"
-  if (process.env.SEVEN_ZIP_BIN) return process.env.SEVEN_ZIP_BIN;
+function toNativePath(p: string) {
+  return p.split("/").join(path.sep);
+}
 
-  // Windows: tenta caminhos comuns
-  if (process.platform === "win32") {
-    const p1 = "C:\\Program Files\\7-Zip\\7z.exe";
-    const p2 = "C:\\Program Files (x86)\\7-Zip\\7z.exe";
-    // não checamos fs.existsSync pra evitar import extra; o spawn vai falhar se não existir
-    return p1;
+function quotePath(p: string) {
+  const escaped = p.replace(/\"/g, "\\\"");
+  return `"${escaped}"`;
+}
+
+export async function createArchive(
+  cfg: BackupConfig,
+  snap: Snapshot,
+  entries: FileEntry[]
+) {
+  if (!entries.length) {
+    throw new Error("No files found to archive.");
   }
-
-  // Linux/mac (p7zip-full geralmente instala "7z" no PATH)
-  return "7z";
-}
-
-function run(cmd: string, args: string[]) {
-  return new Promise<void>((resolve, reject) => {
-    const p = spawn(cmd, args, { stdio: "inherit" });
-
-    p.on("error", (err: any) => {
-      // mascara senha se ela estiver nos args
-      const safeArgs = args.map((a) => (a.startsWith("-p") ? "-p***" : a));
-      const msg =
-        err?.code === "ENOENT"
-          ? `Não encontrei o executável: ${cmd} (args: ${safeArgs.join(" ")})`
-          : `Falha ao executar ${cmd}: ${String(err?.message ?? err)} (args: ${safeArgs.join(" ")})`;
-      reject(new Error(msg));
-    });
-
-    p.on("close", (code) => {
-      if (code === 0) return resolve();
-      const safeArgs = args.map((a) => (a.startsWith("-p") ? "-p***" : a));
-      reject(new Error(`${cmd} exited with code ${code} (args: ${safeArgs.join(" ")})`));
-    });
-  });
-}
-
-export async function createArchive(cfg: BackupConfig, snap: Snapshot) {
-  const outDir = path.join(cfg.repoPath, "archives");
-  await fsp.mkdir(outDir, { recursive: true });
-
-  const zipPath = path.join(outDir, `${snap.id}.zip`);
-  await logLine(cfg.repoPath, `Archive start: ${zipPath}`);
-
-  await new Promise<void>((resolve, reject) => {
-    const output = fs.createWriteStream(zipPath);
-    const archive = archiver("zip", { zlib: { level: 9 } });
-
-    output.on("close", () => resolve());
-    archive.on("error", (err: Error) => reject(err));
-
-    archive.pipe(output);
-
-    archive.append(JSON.stringify(snap, null, 2), { name: "snapshot.json" });
-
-    for (const f of snap.files) {
-      const p = blobPath(cfg.repoPath, f.hash);
-      archive.file(p, { name: `files/${f.relPath}` });
-    }
-
-    archive.finalize();
-  });
-
-  await logLine(cfg.repoPath, `Archive done: ${zipPath}`);
-
-  if (!cfg.archive?.encrypt) return;
 
   const password = process.env.BACKUP_PASSWORD;
   if (!password) {
-    await logLine(cfg.repoPath, "Encryption skipped: BACKUP_PASSWORD not set");
-    return;
+    throw new Error("BACKUP_PASSWORD is required to create a 7z backup.");
   }
 
-  const sevenPath = path.join(outDir, `${snap.id}.7z`);
+  const outDir = path.join(cfg.repoPath, "archives");
+  await fs.mkdir(outDir, { recursive: true });
 
-  await run(get7zBin(), [
-    "a",
-    "-t7z",
-    sevenPath,
-    zipPath,
-    `-p${password}`,
-    "-mhe=on",
-    "-mx=9",
-  ]);
+  const archivePath = path.join(outDir, `${snap.id}.7z`);
+  await logLine(cfg.repoPath, `Archive start: ${archivePath}`);
 
-  await fsp.unlink(zipPath);
-  await logLine(cfg.repoPath, `Archive encrypted (7z): ${sevenPath}`);
+  const tmpDir = path.join(cfg.repoPath, ".tmp");
+  await fs.mkdir(tmpDir, { recursive: true });
+
+  const groups = new Map<string, string[]>();
+  for (const entry of entries) {
+    const relNative = toNativePath(entry.relPath);
+    const list = groups.get(entry.sourceParent) ?? [];
+    list.push(relNative);
+    groups.set(entry.sourceParent, list);
+  }
+
+  let idx = 0;
+  const listFiles: string[] = [];
+
+  try {
+    for (const [parent, rels] of groups) {
+      const listPath = path.join(tmpDir, `${snap.id}-${idx}.list`);
+      listFiles.push(listPath);
+      idx += 1;
+
+      const payload = rels.sort().map(quotePath).join("\n");
+      await fs.writeFile(listPath, payload, "utf-8");
+
+      await run7z(
+        [
+          "a",
+          "-t7z",
+          archivePath,
+          `-p${password}`,
+          "-mhe=on",
+          "-mx=9",
+          "-y",
+          `@${listPath}`,
+        ],
+        { cwd: parent }
+      );
+    }
+  } finally {
+    for (const listPath of listFiles) {
+      await fs.unlink(listPath).catch(() => {});
+    }
+  }
+
+  await logLine(cfg.repoPath, `Archive done: ${archivePath}`);
 }

@@ -27,8 +27,8 @@ async function ensureParentDir(filePath: string) {
 }
 
 /**
- * Cria um .7z protegido por senha.
- * -mhe=on criptografa também os nomes/estrutura (header encryption).
+ * Creates a password-protected .7z archive.
+ * -mhe=on also encrypts file names and structure (header encryption).
  */
 export async function create7zArchive(
   inputPath: string,
@@ -54,8 +54,9 @@ export async function create7zArchive(
 }
 
 /**
- * Testa integridade do arquivo .7z sem extrair.
- */
+ * Tests the integrity of the .7z archive without extracting it.
+ *
+
 export async function test7zArchive(
   archive7z: string,
   password: string,
@@ -69,7 +70,7 @@ export async function test7zArchive(
 }
 
 /**
- * Extrai um .7z protegido por senha.
+ * Extracts a password-protected .7z archive.
  */
 export async function extract7zArchive(
   archive7z: string,

@@ -1,4 +1,4 @@
-import fs from "fs/promises";
+﻿import fs from "fs/promises";
 import path from "path";
 
 export type BackupConfig = {
@@ -8,12 +8,6 @@ export type BackupConfig = {
   ignore?: string[];
   retentionDays: number; // ex: 7, 15, 30
   debounceSeconds?: number; // watch mode
-  archive?: {
-    enabled: boolean;
-    encrypt?: boolean;      // se true e format=7z, usa senha do .env
-    format?: "zip" | "7z";  // default: encrypt ? "7z" : "zip"
-  };
-
 };
 
 export async function loadConfig(configPath: string): Promise<BackupConfig> {
@@ -33,8 +27,6 @@ export async function loadConfig(configPath: string): Promise<BackupConfig> {
 
   cfg.ignore ??= ["**/.git/**", "**/node_modules/**", "**/.cache/**"];
   cfg.debounceSeconds ??= 10;
-  cfg.archive ??= { enabled: true, encrypt: false };
-  cfg.archive.format ??= (cfg.archive.encrypt ? "7z" : "zip");
 
   return cfg;
 }

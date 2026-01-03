@@ -16,9 +16,5 @@
     "**/cache/**"
   ],
   "retentionDays": 15,
-  "debounceSeconds": 10,
-  "archive": {
-    "enabled": true,
-    "encrypt": true
-  }
-}
+  "debounceSeconds": 10
+}

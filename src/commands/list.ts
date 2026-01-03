@@ -1,5 +1,6 @@
-import fs from "fs/promises";
+﻿import fs from "fs/promises";
 import path from "path";
+import chalk from "chalk";
 import { BackupConfig } from "../core/config.js";
 
 type SnapshotFile = {
@@ -35,18 +36,17 @@ export async function listBackups(cfg: BackupConfig, limit = 20) {
   try {
     names = await fs.readdir(snapDir);
   } catch {
-    console.log(`Nenhum snapshot encontrado (pasta não existe): ${snapDir}`);
+    console.log(chalk.yellow(`No snapshots found (missing folder): ${snapDir}`));
     return;
   }
 
   const jsonFiles = names
     .filter((n) => n.endsWith(".json"))
-    // IDs são ISO-like, ordenar desc funciona bem
     .sort((a, b) => b.localeCompare(a))
     .slice(0, Math.max(1, limit));
 
   if (jsonFiles.length === 0) {
-    console.log(`Nenhum snapshot encontrado em: ${snapDir}`);
+    console.log(chalk.yellow(`No snapshots found in: ${snapDir}`));
     return;
   }
 
@@ -71,7 +71,6 @@ export async function listBackups(cfg: BackupConfig, limit = 20) {
         totalBytes,
       });
     } catch {
-      // Se um snapshot estiver corrompido, só pula
       rows.push({
         id: fileName.replace(/\.json$/, ""),
         date: "invalid json",
@@ -81,14 +80,15 @@ export async function listBackups(cfg: BackupConfig, limit = 20) {
     }
   }
 
-  // Header
   const hId = pad("ID", 22);
   const hDate = pad("CREATED_AT", 24);
   const hFiles = pad("FILES", 7);
   const hSize = pad("TOTAL", 12);
 
   console.log(`${hId}  ${hDate}  ${hFiles}  ${hSize}`);
-  console.log(`${"-".repeat(22)}  ${"-".repeat(24)}  ${"-".repeat(7)}  ${"-".repeat(12)}`);
+  console.log(
+    `${"-".repeat(22)}  ${"-".repeat(24)}  ${"-".repeat(7)}  ${"-".repeat(12)}`
+  );
 
   for (const r of rows) {
     const id = pad(r.id, 22);
@@ -98,5 +98,5 @@ export async function listBackups(cfg: BackupConfig, limit = 20) {
     console.log(`${id}  ${date}  ${files}  ${size}`);
   }
 
-  console.log(`\nMostrando ${rows.length} snapshot(s). Use --limit para mudar.`);
+  console.log(chalk.dim(`\nShowing ${rows.length} snapshot(s). Use --limit to change.`));
 }

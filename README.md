@@ -1,6 +1,6 @@
-# Smart Backup Manager
+﻿# Smart Backup Manager
 
-A **smart incremental backup system**, cross-platform (**Linux / Windows**), built with **Node.js + TypeScript**, without any web frontend.
+A smart incremental backup system, cross-platform (Linux / Windows), built with Node.js + TypeScript, without any web frontend.
 
 Designed for:
 
@@ -13,15 +13,14 @@ Designed for:
 
 ## Features
 
-- :file_folder: Configurable directory monitoring (`watch`)
-- :brain: Automatic change detection
-- :package: Incremental backups with **hash-based deduplication (blobs)**
-- :card_file_box: Versioned snapshots stored as **JSON**
-- :lock: Optional archive compression with **encryption**
-- :recycle: Automatic retention policy (7, 15, or 30 days)
-- :broom: Full purge with **garbage collection**
-- :arrows_counterclockwise: Complete restoration from any snapshot
-- :gear: 24/7 automation using **PM2**
+- Configurable directory monitoring (watch)
+- Incremental backups based on file hash changes
+- Versioned snapshots stored as JSON
+- Encrypted 7z archives (password from .env)
+- Automatic retention policy (7, 15, 30 days)
+- Restore from any snapshot archive
+- Terminal notifications with chalk
+- 24/7 automation using PM2
 
 ---
 
@@ -29,20 +28,20 @@ Designed for:
 
 ```text
 repoPath/
-├── blobs/       # Deduplicated files (hash-based)
-├── snapshots/   # Backup metadata (.json)
-├── archives/    # Zip / 7z archives (optional)
-└── logs/        # Execution logs
+  snapshots/   # Backup metadata (.json)
+  archives/    # 7z archives (encrypted)
+  logs/        # Execution logs
+  .tmp/        # Temporary lists for 7z
 ```
 
 ---
 
 ## Configuration
 
-> This file must NOT be committed to the repository.  
-> Use `config.json.example` as a base.
+> This file must NOT be committed to the repository.
+> Use config.json.exemple as a base.
 
-### `config.json` (example)
+### config.json (example)
 
 ```json
 {
@@ -59,21 +58,19 @@ repoPath/
     "**/build/**"
   ],
   "retentionDays": 15,
-  "debounceSeconds": 10,
-  "archive": {
-    "enabled": true,
-    "encrypt": true
-  }
+  "debounceSeconds": 10
 }
 ```
 
-### `.env`
+### .env
 
 ```env
 BACKUP_PASSWORD=change_me
+# Optional override for 7z binary
+# SEVEN_ZIP_BIN=C:\Program Files\7-Zip\7z.exe
 ```
 
-Required only if `archive.enabled = true` and `archive.encrypt = true`.
+7-Zip is required and must be available on PATH or via SEVEN_ZIP_BIN.
 
 ---
 
@@ -91,6 +88,12 @@ npm run dev -- run
 npm run dev -- watch
 ```
 
+### Check if files changed since last snapshot
+
+```bash
+npm run checkbackup
+```
+
 ### List snapshots
 
 ```bash
@@ -103,7 +106,7 @@ npm run list
 npm run restore -- --id <SNAPSHOT_ID>
 ```
 
-### Delete a snapshot (logical delete)
+### Delete a snapshot
 
 ```bash
 npm run delete -- --id <SNAPSHOT_ID> --yes
@@ -113,7 +116,7 @@ npm run delete -- --id <SNAPSHOT_ID> --yes
 
 ## Full Purge (IRREVERSIBLE)
 
-Removes snapshot, archive, and orphaned blobs.
+Removes snapshot and archive.
 
 ### Real execution
 
@@ -154,30 +157,30 @@ pm2 save
 - TypeScript
 - Commander
 - Chokidar
-- Archiver
-- Crypto
-- PM2
+- fast-glob
+- Chalk
+- 7-Zip
 
 ---
 
 ## Notes
 
-- Backups are never overwritten; everything is fully versioned.
-- Deduplication drastically reduces disk usage.
-- Suitable for continuous execution on servers or local machines.
+- Backups are never overwritten; everything is versioned.
+- No blob store is used; each backup is a full archive created only when files change.
+- Archives are encrypted with BACKUP_PASSWORD.
 
 ---
 
 ## Usage Policy and Ethics
 
-This project is open-source and distributed under the **MIT License**.  
+This project is open-source and distributed under the MIT License.
 In addition to the license terms, the following guidelines promote ethical, transparent, and responsible usage.
 
 ### Commercial Resale
 - This project should not be resold as-is, rebranded, or distributed commercially without significant original modifications.
 - Selling this software alone, or bundling it as a paid product without meaningful added value, is strongly discouraged.
 
-> Note: This is an ethical guideline, not a legal restriction.  
+> Note: This is an ethical guideline, not a legal restriction.
 > The MIT License still applies.
 
 ---

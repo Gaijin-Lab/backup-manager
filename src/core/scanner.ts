@@ -4,6 +4,8 @@ import path from "path";
 export type FileEntry = {
   absPath: string;
   relPath: string;
+  sourceRoot: string;
+  sourceParent: string;
 };
 
 export async function scanSources(
@@ -13,9 +15,12 @@ export async function scanSources(
   const entries: FileEntry[] = [];
 
   for (const src of sources) {
+    const sourceRoot = path.resolve(src);
+    const sourceParent = path.dirname(sourceRoot);
+    const sourceBase = path.basename(sourceRoot);
     const patterns = ["**/*"];
     const files = await fg(patterns, {
-      cwd: src,
+      cwd: sourceRoot,
       onlyFiles: true,
       dot: true,
       ignore,
@@ -24,8 +29,10 @@ export async function scanSources(
 
     for (const rel of files) {
       entries.push({
-        absPath: path.join(src, rel),
-        relPath: `${path.basename(src)}/${rel}`.replace(/\\/g, "/"),
+        absPath: path.join(sourceRoot, rel),
+        relPath: `${sourceBase}/${rel}`.replace(/\\/g, "/"),
+        sourceRoot,
+        sourceParent,
       });
     }
   }

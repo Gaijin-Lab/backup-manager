@@ -1,18 +1,7 @@
-import fs from "fs/promises";
+﻿import fs from "fs/promises";
 import path from "path";
 import { BackupConfig } from "../core/config.js";
-import { blobPath } from "../core/store.js";
-
-type SnapshotFile = {
-  id: string;
-  createdAt: string;
-  files: Array<{
-    relPath: string;
-    hash: string;
-    size: number;
-    mtimeMs: number;
-  }>;
-};
+import { run7z } from "../core/sevenZip.js";
 
 async function exists(p: string) {
   try {
@@ -29,39 +18,24 @@ export async function restoreBackup(
   overwrite = false
 ) {
   if (!cfg.restorePath) {
-    throw new Error("restorePath não definido no config.json");
+    throw new Error("restorePath is not set in config.json");
   }
 
-  const snapFile = path.join(cfg.repoPath, "snapshots", `${snapshotId}.json`);
-  if (!(await exists(snapFile))) {
-    throw new Error(`Snapshot não encontrado: ${snapFile}`);
+  const archiveFile = path.join(cfg.repoPath, "archives", `${snapshotId}.7z`);
+  if (!(await exists(archiveFile))) {
+    throw new Error(`Archive not found: ${archiveFile}`);
   }
 
-  const raw = await fs.readFile(snapFile, "utf-8");
-  const snap = JSON.parse(raw) as SnapshotFile;
+  const password = process.env.BACKUP_PASSWORD;
+  if (!password) {
+    throw new Error("BACKUP_PASSWORD is required to restore a backup.");
+  }
 
   const destRoot = path.resolve(cfg.restorePath);
   await fs.mkdir(destRoot, { recursive: true });
 
-  let restored = 0;
-  let skipped = 0;
+  const overwriteMode = overwrite ? "-aoa" : "-aos";
+  await run7z(["x", archiveFile, `-o${destRoot}`, `-p${password}`, "-y", overwriteMode]);
 
-  for (const f of snap.files) {
-    const src = blobPath(cfg.repoPath, f.hash);
-    const dest = path.join(destRoot, "files", f.relPath);
-
-    const destDir = path.dirname(dest);
-    await fs.mkdir(destDir, { recursive: true });
-
-    const destExists = await exists(dest);
-    if (destExists && !overwrite) {
-      skipped++;
-      continue;
-    }
-
-    await fs.copyFile(src, dest);
-    restored++;
-  }
-
-  return { restored, skipped, snapshotId: snap.id, to: destRoot };
+  return { snapshotId, to: destRoot, overwrite };
 }
