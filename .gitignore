@@ -17,6 +17,8 @@ pnpm-debug.log*
 config.json
 !config.json.example
 
+package-lock.json
+
 # =========================
 # Build / TypeScript
 # =========================
