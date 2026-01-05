@@ -160,4 +160,23 @@ program
     console.log(`- archive.7z:    ${res.deleted7z ? "deleted" : "not found"}`);
   });
 
-await program.parseAsync(process.argv);
+const knownCommands = new Set([
+  "run",
+  "watch",
+  "check",
+  "list",
+  "restore",
+  "delete",
+  "purge",
+]);
+
+const argv = process.argv.slice(2);
+const hasCommand = argv.some((arg) => knownCommands.has(arg));
+const hasHelpFlag = argv.some((arg) => arg === "-h" || arg === "--help");
+const hasVersionFlag = argv.some((arg) => arg === "-V" || arg === "--version");
+
+if (!hasCommand && !hasHelpFlag && !hasVersionFlag) {
+  argv.push("run");
+}
+
+await program.parseAsync(["node", "index.ts", ...argv]);

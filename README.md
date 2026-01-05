@@ -76,22 +76,24 @@ BACKUP_PASSWORD=change_me
 
 ## CLI Commands
 
+Default behavior runs a backup when no subcommand is provided. The aliases below simplify common tasks.
+
 ### Run a manual backup
 
 ```bash
-npm run dev -- run
+npm run backup
 ```
 
 ### Watch for changes
 
 ```bash
-npm run dev -- watch
+npm run backup:watch
 ```
 
 ### Check if files changed since last snapshot
 
 ```bash
-npm run checkbackup
+npm run backup:check
 ```
 
 ### List snapshots
