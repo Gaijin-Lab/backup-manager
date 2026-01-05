@@ -101,13 +101,21 @@ program
 program
   .command("restore")
   .description("Restore a snapshot to the configured restorePath")
-  .requiredOption("--id <snapshotId>", "snapshot id (filename without .json)")
+  .argument("[snapshotId]", "snapshot id (filename without .json)")
+  .option("--id <snapshotId>", "snapshot id (filename without .json)")
   .option("--overwrite", "overwrite existing files", false)
-  .action(async (options) => {
+  .action(async (snapshotId, options) => {
+    const id = options.id ?? snapshotId;
+    if (!id) {
+      console.log(chalk.yellow("Snapshot id required. Use: restore <ID> or restore --id <ID>"));
+      process.exitCode = 2;
+      return;
+    }
+
     const opts = program.opts();
     const cfg = await loadConfig(opts.config);
 
-    const res = await restoreBackup(cfg, options.id, Boolean(options.overwrite));
+    const res = await restoreBackup(cfg, id, Boolean(options.overwrite));
 
     console.log(chalk.green("Restore OK"));
     console.log(`- Snapshot: ${res.snapshotId}`);
@@ -118,11 +126,19 @@ program
 program
   .command("delete")
   .description("Delete a snapshot and its archive")
-  .requiredOption("--id <snapshotId>", "snapshot id (filename without .json)")
+  .argument("[snapshotId]", "snapshot id (filename without .json)")
+  .option("--id <snapshotId>", "snapshot id (filename without .json)")
   .option("--yes", "confirm deletion", false)
-  .action(async (options) => {
+  .action(async (snapshotId, options) => {
+    const id = options.id ?? snapshotId;
+    if (!id) {
+      console.log(chalk.yellow("Snapshot id required. Use: delete <ID> or delete --id <ID>"));
+      process.exitCode = 2;
+      return;
+    }
+
     if (!options.yes) {
-      console.log(chalk.yellow("Confirmation required. Use: delete --id <ID> --yes"));
+      console.log(chalk.yellow("Confirmation required. Use: delete <ID> --yes"));
       process.exitCode = 2;
       return;
     }
@@ -130,7 +146,7 @@ program
     const opts = program.opts();
     const cfg = await loadConfig(opts.config);
 
-    const res = await deleteBackup(cfg, options.id);
+    const res = await deleteBackup(cfg, id);
     console.log(chalk.green("Delete finished"));
     console.log(`- snapshot.json: ${res.deletedSnapshot ? "deleted" : "not found"}`);
     console.log(`- archive.7z:    ${res.deleted7z ? "deleted" : "not found"}`);
@@ -139,12 +155,20 @@ program
 program
   .command("purge")
   .description("Purge a snapshot and archive (IRREVERSIBLE)")
-  .requiredOption("--id <snapshotId>", "snapshot id")
+  .argument("[snapshotId]", "snapshot id")
+  .option("--id <snapshotId>", "snapshot id")
   .option("--dry-run", "show what would be removed, but do nothing", false)
   .option("--yes", "confirm purge", false)
-  .action(async (options) => {
+  .action(async (snapshotId, options) => {
+    const id = options.id ?? snapshotId;
+    if (!id) {
+      console.log(chalk.yellow("Snapshot id required. Use: purge <ID> or purge --id <ID>"));
+      process.exitCode = 2;
+      return;
+    }
+
     if (!options.yes) {
-      console.log(chalk.yellow("Confirmation required. Use: purge --id <ID> --yes"));
+      console.log(chalk.yellow("Confirmation required. Use: purge <ID> --yes"));
       process.exitCode = 2;
       return;
     }
@@ -152,7 +176,7 @@ program
     const opts = program.opts();
     const cfg = await loadConfig(opts.config);
 
-    const res = await purgeTotal(cfg, options.id, Boolean(options.dryRun));
+    const res = await purgeTotal(cfg, id, Boolean(options.dryRun));
 
     const suffix = res.dryRun ? " (dry-run)" : "";
     console.log(chalk.green(`Purge${suffix}`));

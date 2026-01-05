@@ -15,8 +15,8 @@
     "checkbackup": "tsx src/index.ts check",
     "list": "tsx src/index.ts list",
     "restore": "tsx src/index.ts restore",
-    "delete": "tsx src/index.ts delete",
-    "purge": "tsx src/index.ts purge",
+    "delete": "tsx src/index.ts delete --yes",
+    "purge": "tsx src/index.ts purge --yes",
     "clean": "rimraf dist repo"
   },
   "keywords": [

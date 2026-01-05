@@ -105,31 +105,34 @@ npm run list
 ### Restore a snapshot
 
 ```bash
-npm run restore -- --id <SNAPSHOT_ID>
+npm run restore <SNAPSHOT_ID>
 ```
 
 ### Delete a snapshot
 
 ```bash
-npm run delete -- --id <SNAPSHOT_ID> --yes
+npm run delete <SNAPSHOT_ID>
 ```
+
+This npm script auto-confirms deletion. Use the CLI directly if you want manual confirmation.
 
 ---
 
 ## Full Purge (IRREVERSIBLE)
 
 Removes snapshot and archive.
+The npm script auto-confirms purge. Use the CLI directly if you want manual confirmation.
 
 ### Real execution
 
 ```bash
-npm run purge -- --id <SNAPSHOT_ID> --yes
+npm run purge <SNAPSHOT_ID>
 ```
 
 ### Dry-run (simulation)
 
 ```bash
-npm run purge -- --id <SNAPSHOT_ID> --dry-run --yes
+npm run purge -- <SNAPSHOT_ID> --dry-run
 ```
 
 ---
