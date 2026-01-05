@@ -3,6 +3,7 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import { loadConfig } from "./core/config.js";
+import { logLine } from "./core/logger.js";
 import { checkForChanges, runBackup } from "./core/snapshot.js";
 import { startWatcher } from "./core/watcher.js";
 import { applyRetention } from "./core/retention.js";
@@ -115,17 +116,44 @@ program
     const opts = program.opts();
     const cfg = await loadConfig(opts.config);
 
-    const res = await restoreBackup(cfg, id, Boolean(options.overwrite));
+    let res;
+    try {
+      res = await restoreBackup(cfg, id, Boolean(options.overwrite));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.startsWith("Archive not found")) {
+        console.log(chalk.yellow("Archive not found. Nothing to restore."));
+        console.log(chalk.dim(msg));
+        await logLine(cfg.repoPath, "Restore skipped: archive not found", {
+          level: "warn",
+          context: { snapshotId: id, archiveStorePath: cfg.archiveStorePath, detail: msg },
+        });
+        process.exitCode = 2;
+        return;
+      }
+      throw err;
+    }
 
     console.log(chalk.green("Restore OK"));
     console.log(`- Snapshot: ${res.snapshotId}`);
     console.log(`- To: ${res.to}`);
     console.log(`- Overwrite: ${res.overwrite ? "yes" : "no"}`);
+
+    await logLine(cfg.repoPath, "Restore completed", {
+      level: "info",
+      context: {
+        snapshotId: res.snapshotId,
+        restorePath: res.to,
+        overwrite: res.overwrite,
+        archivePath: res.archivePath,
+        archiveStorePath: cfg.archiveStorePath,
+      },
+    });
   });
 
 program
   .command("delete")
-  .description("Delete a snapshot and its archive")
+  .description("Move archive to archiveStorePath (keep snapshot metadata)")
   .argument("[snapshotId]", "snapshot id (filename without .json)")
   .option("--id <snapshotId>", "snapshot id (filename without .json)")
   .option("--yes", "confirm deletion", false)
@@ -146,10 +174,33 @@ program
     const opts = program.opts();
     const cfg = await loadConfig(opts.config);
 
+    if (!cfg.archiveStorePath) {
+      console.log(chalk.yellow("archiveStorePath is required in config.json to use delete."));
+      await logLine(cfg.repoPath, "Delete skipped: archiveStorePath missing", {
+        level: "warn",
+        context: { snapshotId: id },
+      });
+      process.exitCode = 2;
+      return;
+    }
+
     const res = await deleteBackup(cfg, id);
     console.log(chalk.green("Delete finished"));
-    console.log(`- snapshot.json: ${res.deletedSnapshot ? "deleted" : "not found"}`);
-    console.log(`- archive.7z:    ${res.deleted7z ? "deleted" : "not found"}`);
+    if (!res.movedArchive) {
+      console.log("- archive.7z:    not found");
+      await logLine(cfg.repoPath, "Delete skipped: archive not found", {
+        level: "warn",
+        context: { snapshotId: id, archiveStorePath: cfg.archiveStorePath },
+      });
+      return;
+    }
+    console.log("- archive.7z:    moved to archiveStorePath");
+    console.log(`- stored:        ${res.storedPath}`);
+    console.log(chalk.yellow("Restore will use archiveStorePath when the archive is missing."));
+    await logLine(cfg.repoPath, "Archive moved to archiveStorePath", {
+      level: "info",
+      context: { snapshotId: id, archiveStorePath: cfg.archiveStorePath, storedPath: res.storedPath },
+    });
   });
 
 program
@@ -182,6 +233,17 @@ program
     console.log(chalk.green(`Purge${suffix}`));
     console.log(`- snapshot.json: ${res.deletedSnapshot ? "deleted" : "not found"}`);
     console.log(`- archive.7z:    ${res.deleted7z ? "deleted" : "not found"}`);
+    await logLine(cfg.repoPath, "Purge completed", {
+      level: "info",
+      context: {
+        snapshotId: id,
+        dryRun: res.dryRun,
+        deletedSnapshot: res.deletedSnapshot,
+        deletedArchive: res.deleted7z,
+        deletedStore: res.deletedStore,
+        archiveStorePath: cfg.archiveStorePath,
+      },
+    });
   });
 
 const knownCommands = new Set([

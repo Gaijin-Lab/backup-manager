@@ -5,6 +5,7 @@ export type BackupConfig = {
   repoPath: string;
   sources: string[];
   restorePath?: string;
+  archiveStorePath?: string;
   ignore?: string[];
   retentionDays: number; // ex: 7, 15, 30
   debounceSeconds?: number; // watch mode
@@ -23,6 +24,10 @@ export async function loadConfig(configPath: string): Promise<BackupConfig> {
 
   if (cfg.restorePath) {
     cfg.restorePath = path.resolve(cfg.restorePath);
+  }
+
+  if (cfg.archiveStorePath) {
+    cfg.archiveStorePath = path.resolve(cfg.archiveStorePath);
   }
 
   cfg.ignore ??= ["**/.git/**", "**/node_modules/**", "**/.cache/**"];

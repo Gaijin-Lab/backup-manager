@@ -17,14 +17,21 @@ export async function purgeTotal(
   dryRun = false
 ) {
   const snapFile = path.join(cfg.repoPath, "snapshots", `${snapshotId}.json`);
-  const sevenFile = path.join(cfg.repoPath, "archives", `${snapshotId}.7z`);
+  const archivesDir = path.join(cfg.repoPath, "archives");
+  const sevenFile = path.join(archivesDir, `${snapshotId}.7z`);
+  const storeFile = cfg.archiveStorePath
+    ? path.join(cfg.archiveStorePath, `${snapshotId}.7z`)
+    : null;
 
   const deletedSnapshot = dryRun ? false : await safeUnlink(snapFile);
-  const deleted7z = dryRun ? false : await safeUnlink(sevenFile);
+  const deletedArchive = dryRun ? false : await safeUnlink(sevenFile);
+  const deletedStore = storeFile ? (dryRun ? false : await safeUnlink(storeFile)) : false;
+  const deleted7z = deletedArchive || deletedStore;
 
   return {
     deletedSnapshot,
     deleted7z,
+    deletedStore,
     dryRun,
   };
 }

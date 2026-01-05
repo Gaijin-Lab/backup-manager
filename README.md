@@ -50,6 +50,7 @@ repoPath/
     "C:/Projects/example-project"
   ],
   "restorePath": "C:/Backups/backup-manager/restore",
+  "archiveStorePath": "D:/BackupCold/archives",
   "ignore": [
     "**/.git/**",
     "**/node_modules/**",
@@ -61,6 +62,8 @@ repoPath/
   "debounceSeconds": 10
 }
 ```
+
+`archiveStorePath` is required for `delete` and should point to a disk/location where you want to keep old archives.
 
 ### .env
 
@@ -108,19 +111,22 @@ npm run list
 npm run restore <SNAPSHOT_ID>
 ```
 
-### Delete a snapshot
+If the archive was moved by `delete`, `restore` will read it from `archiveStorePath`.
+
+### Delete only the archive (move to archiveStorePath)
 
 ```bash
 npm run delete <SNAPSHOT_ID>
 ```
 
-This npm script auto-confirms deletion. Use the CLI directly if you want manual confirmation.
+This npm script auto-confirms deletion. It moves only the archive to `archiveStorePath`
+and keeps the snapshot metadata. Use the CLI directly if you want manual confirmation.
 
 ---
 
 ## Full Purge (IRREVERSIBLE)
 
-Removes snapshot and archive.
+Removes snapshot and archive (aggressive removal), including any archived file in `archiveStorePath`.
 The npm script auto-confirms purge. Use the CLI directly if you want manual confirmation.
 
 ### Real execution

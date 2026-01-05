@@ -22,8 +22,20 @@ export async function restoreBackup(
   }
 
   const archiveFile = path.join(cfg.repoPath, "archives", `${snapshotId}.7z`);
+  let archivePath = archiveFile;
   if (!(await exists(archiveFile))) {
-    throw new Error(`Archive not found: ${archiveFile}`);
+    if (cfg.archiveStorePath) {
+      const storedFile = path.join(cfg.archiveStorePath, `${snapshotId}.7z`);
+      if (await exists(storedFile)) {
+        archivePath = storedFile;
+      } else {
+        throw new Error(
+          `Archive not found in repo or archiveStorePath: ${archiveFile} | ${storedFile}`
+        );
+      }
+    } else {
+      throw new Error(`Archive not found: ${archiveFile}`);
+    }
   }
 
   const password = process.env.BACKUP_PASSWORD;
@@ -35,7 +47,7 @@ export async function restoreBackup(
   await fs.mkdir(destRoot, { recursive: true });
 
   const overwriteMode = overwrite ? "-aoa" : "-aos";
-  await run7z(["x", archiveFile, `-o${destRoot}`, `-p${password}`, "-y", overwriteMode]);
+  await run7z(["x", archivePath, `-o${destRoot}`, `-p${password}`, "-y", overwriteMode]);
 
-  return { snapshotId, to: destRoot, overwrite };
+  return { snapshotId, to: destRoot, overwrite, archivePath };
 }

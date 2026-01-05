@@ -4,6 +4,7 @@
     "/srv/projects/example-project"
   ],
   "restorePath": "/var/backups/backup-manager/restore",
+  "archiveStorePath": "/mnt/cold-storage/backup-archives",
   "ignore": [
     "**/.git/**",
     "**/node_modules/**",
