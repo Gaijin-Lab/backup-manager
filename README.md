@@ -269,4 +269,5 @@ All final architectural decisions, validations, and implementations are performe
 This project is licensed under the MIT License.
 
 GAIJIN LAB 2026
-https://discord.gg/KdMFB6dAuh
+
+[![Discord](https://img.shields.io/discord/SEU_SERVER_ID?label=Discord&logo=discord&color=5865F2)](https://discord.gg/KdMFB6dAuh)
