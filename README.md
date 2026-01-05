@@ -14,11 +14,11 @@ Designed for:
 ## Features
 
 - Configurable directory monitoring (watch)
-- Incremental backups based on file hash changes
+- Full + incremental backups based on file hash changes
 - Versioned snapshots stored as JSON
 - Encrypted 7z archives (password from .env)
 - Automatic retention policy (7, 15, 30 days)
-- Restore from any snapshot archive
+- Restore from full + incremental chain
 - Terminal notifications with chalk
 - 24/7 automation using PM2
 
@@ -51,6 +51,10 @@ repoPath/
   ],
   "restorePath": "C:/Backups/backup-manager/restore",
   "archiveStorePath": "D:/BackupCold/archives",
+  "fullEverySnapshots": 20,
+  "fullEveryHours": 72,
+  "maxChainLength": 30,
+  "restoreVerify": false,
   "ignore": [
     "**/.git/**",
     "**/node_modules/**",
@@ -64,6 +68,9 @@ repoPath/
 ```
 
 `archiveStorePath` is required for `delete` and should point to a disk/location where you want to keep old archives.
+`fullEverySnapshots` controls how often a new FULL is created. `fullEveryHours` forces a new FULL
+if the base is older than N hours. `maxChainLength` caps the chain length. `restoreVerify` enables
+sample hash checks after restore.
 
 ### .env
 
@@ -112,6 +119,8 @@ npm run restore <SNAPSHOT_ID>
 ```
 
 If the archive was moved by `delete`, `restore` will read it from `archiveStorePath`.
+If the snapshot is incremental, restore will apply the FULL base + incrementals to rebuild the state.
+Incremental restores always overwrite files to ensure the snapshot is reconstructed exactly.
 
 ### Delete only the archive (move to archiveStorePath)
 
@@ -142,6 +151,24 @@ npm run purge -- <SNAPSHOT_ID> --dry-run
 ```
 
 ---
+
+## Incremental Model
+
+- The first backup is FULL and includes all files.
+- Subsequent backups are INCR and include only added/modified files plus a list of removed files.
+- FULL is created again based on `fullEverySnapshots`, `fullEveryHours`, or `maxChainLength`.
+- Retention keeps any FULL/INCR dependencies required to restore snapshots within the retention window.
+
+---
+
+## Manual Tests (Suggested)
+
+1) Run a first backup (FULL).
+2) Change one file and run again (INCR with small archive).
+3) Remove one file and run again (INCR with removedFiles).
+4) Restore the latest snapshot and verify the removed file is gone.
+5) Run backups until `maxChainLength` and confirm a new FULL is created.
+6) Let snapshots expire and verify retention keeps needed chain dependencies.
 
 ## 24/7 Automation (PM2)
 
@@ -177,7 +204,7 @@ pm2 save
 ## Notes
 
 - Backups are never overwritten; everything is versioned.
-- No blob store is used; each backup is a full archive created only when files change.
+- Archives are stored as FULL + INCR to avoid duplicating unchanged files.
 - Archives are encrypted with BACKUP_PASSWORD.
 
 ---
@@ -242,3 +269,4 @@ All final architectural decisions, validations, and implementations are performe
 This project is licensed under the MIT License.
 
 GAIJIN LAB 2026
+https://discord.gg/KdMFB6dAuh

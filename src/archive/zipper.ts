@@ -16,12 +16,23 @@ function quotePath(p: string) {
   return `"${escaped}"`;
 }
 
+type ArchiveMode = "full" | "incr";
+type ArchiveOptions = {
+  mode?: ArchiveMode;
+  includeRelPaths?: Set<string>;
+};
+
 export async function createArchive(
   cfg: BackupConfig,
   snap: Snapshot,
-  entries: FileEntry[]
+  entries: FileEntry[],
+  options: ArchiveOptions = {}
 ) {
-  if (!entries.length) {
+  const filteredEntries = options.includeRelPaths
+    ? entries.filter((e) => options.includeRelPaths!.has(e.relPath))
+    : entries;
+
+  if (!filteredEntries.length) {
     throw new Error("No files found to archive.");
   }
 
@@ -34,13 +45,14 @@ export async function createArchive(
   await fs.mkdir(outDir, { recursive: true });
 
   const archivePath = path.join(outDir, `${snap.id}.7z`);
-  await logLine(cfg.repoPath, `Archive start: ${archivePath}`);
+  const modeLabel = options.mode ? ` (${options.mode})` : "";
+  await logLine(cfg.repoPath, `Archive start: ${archivePath}${modeLabel}`);
 
   const tmpDir = path.join(cfg.repoPath, ".tmp");
   await fs.mkdir(tmpDir, { recursive: true });
 
   const groups = new Map<string, string[]>();
-  for (const entry of entries) {
+  for (const entry of filteredEntries) {
     const relNative = toNativePath(entry.relPath);
     const list = groups.get(entry.sourceParent) ?? [];
     list.push(relNative);
@@ -79,5 +91,5 @@ export async function createArchive(
     }
   }
 
-  await logLine(cfg.repoPath, `Archive done: ${archivePath}`);
+  await logLine(cfg.repoPath, `Archive done: ${archivePath}${modeLabel}`);
 }

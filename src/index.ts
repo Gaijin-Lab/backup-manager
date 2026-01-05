@@ -4,7 +4,7 @@ import { Command } from "commander";
 import chalk from "chalk";
 import { loadConfig } from "./core/config.js";
 import { logLine } from "./core/logger.js";
-import { checkForChanges, runBackup } from "./core/snapshot.js";
+import { checkForChanges, loadSnapshotsIndex, runBackup } from "./core/snapshot.js";
 import { startWatcher } from "./core/watcher.js";
 import { applyRetention } from "./core/retention.js";
 import { listBackups } from "./commands/list.js";
@@ -131,6 +131,24 @@ program
         process.exitCode = 2;
         return;
       }
+      if (msg.startsWith("Snapshot not found")) {
+        console.log(chalk.yellow(msg));
+        await logLine(cfg.repoPath, "Restore skipped: snapshot not found", {
+          level: "warn",
+          context: { snapshotId: id },
+        });
+        process.exitCode = 2;
+        return;
+      }
+      if (msg.startsWith("Chain broken")) {
+        console.log(chalk.red(msg));
+        await logLine(cfg.repoPath, "Restore failed: chain broken", {
+          level: "error",
+          context: { snapshotId: id, detail: msg },
+        });
+        process.exitCode = 2;
+        return;
+      }
       throw err;
     }
 
@@ -145,7 +163,7 @@ program
         snapshotId: res.snapshotId,
         restorePath: res.to,
         overwrite: res.overwrite,
-        archivePath: res.archivePath,
+        archives: res.archivePaths?.length ?? 0,
         archiveStorePath: cfg.archiveStorePath,
       },
     });
@@ -226,6 +244,18 @@ program
 
     const opts = program.opts();
     const cfg = await loadConfig(opts.config);
+
+    const snapshotsIndex = await loadSnapshotsIndex(cfg.repoPath);
+    const dependents = Array.from(snapshotsIndex.values()).filter(
+      (snap) => snap.prevId === id || snap.baseId === id
+    );
+    if (dependents.length > 0) {
+      console.log(
+        chalk.yellow(
+          `Warning: ${dependents.length} snapshot(s) depend on ${id}. Purge will break the chain.`
+        )
+      );
+    }
 
     const res = await purgeTotal(cfg, id, Boolean(options.dryRun));
 

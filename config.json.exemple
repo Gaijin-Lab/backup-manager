@@ -5,6 +5,10 @@
   ],
   "restorePath": "/var/backups/backup-manager/restore",
   "archiveStorePath": "/mnt/cold-storage/backup-archives",
+  "fullEverySnapshots": 20,
+  "fullEveryHours": 72,
+  "maxChainLength": 30,
+  "restoreVerify": false,
   "ignore": [
     "**/.git/**",
     "**/node_modules/**",

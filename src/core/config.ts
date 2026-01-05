@@ -6,6 +6,10 @@ export type BackupConfig = {
   sources: string[];
   restorePath?: string;
   archiveStorePath?: string;
+  fullEverySnapshots?: number;
+  fullEveryHours?: number;
+  maxChainLength?: number;
+  restoreVerify?: boolean;
   ignore?: string[];
   retentionDays: number; // ex: 7, 15, 30
   debounceSeconds?: number; // watch mode
@@ -29,6 +33,10 @@ export async function loadConfig(configPath: string): Promise<BackupConfig> {
   if (cfg.archiveStorePath) {
     cfg.archiveStorePath = path.resolve(cfg.archiveStorePath);
   }
+
+  cfg.fullEverySnapshots ??= 20;
+  cfg.maxChainLength ??= 30;
+  cfg.restoreVerify ??= false;
 
   cfg.ignore ??= ["**/.git/**", "**/node_modules/**", "**/.cache/**"];
   cfg.debounceSeconds ??= 10;
